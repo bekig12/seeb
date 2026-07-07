@@ -1343,4 +1343,96 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
           }
 
           const response = await fetch(`${API_BASE}/send_message`, {
-           
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to send message");
+          }
+          
+          input.value = "";
+          input.placeholder = 'Type your message or paste image (Ctrl+V)...';
+          input.style.borderColor = '';
+          pendingImage = null;
+          removeFileAttachment();
+          
+          await loadMessages();
+          showToast("✅ Message sent successfully!", "success");
+        } catch (error) {
+          showToast("❌ Failed to send message: " + error.message, "error");
+        }
+      }
+
+      // ============================================================
+      // COPY PROMPT
+      // ============================================================
+      function copyPrompt() {
+        const promptText = document.getElementById("promptText").innerText;
+        navigator.clipboard.writeText(promptText).then(() => {
+          const btn = document.querySelector(".copy-btn");
+          btn.textContent = "✅ Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "📋 Copy";
+            btn.classList.remove("copied");
+          }, 2000);
+        }).catch(() => {
+          const textarea = document.createElement("textarea");
+          textarea.value = promptText;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          const btn = document.querySelector(".copy-btn");
+          btn.textContent = "✅ Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "📋 Copy";
+            btn.classList.remove("copied");
+          }, 2000);
+        });
+      }
+
+      // ============================================================
+      // INIT
+      // ============================================================
+      async function init() {
+        initSender();
+        
+        try {
+          const response = await fetch(`${API_BASE}/messages`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.messages && data.messages.length > 0) {
+              const lastMessage = data.messages[data.messages.length - 1];
+              lastSeenId = parseInt(lastMessage.id);
+            }
+            renderMessages(data.messages || []);
+          }
+        } catch (error) {
+          console.error("Init error:", error);
+        }
+
+        messagePollInterval = setInterval(loadMessages, 5000);
+      }
+
+      init();
+      window.downloadPatcher = downloadPatcher;
+      window.selectSender = selectSender;
+      window.sendMessage = sendMessage;
+      window.copyPrompt = copyPrompt;
+      window.copyFolderPath = copyFolderPath;
+      window.openImageFullscreen = openImageFullscreen;
+      window.closeImageOverlay = closeImageOverlay;
+      window.handleFileAttachment = handleFileAttachment;
+      window.removeFileAttachment = removeFileAttachment;
+
+      window.addEventListener("beforeunload", () => {
+        if (messagePollInterval) clearInterval(messagePollInterval);
+      });
+    </script>
+  </body>
+</html>
