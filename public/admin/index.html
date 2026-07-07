@@ -218,7 +218,6 @@
       .edit-input:focus {
         border-color: #3fd2c1;
       }
-      /* Chat image styles */
       .chat-image {
         max-width: 150px;
         max-height: 150px;
@@ -231,7 +230,42 @@
       .chat-image:hover {
         transform: scale(1.02);
       }
-      /* Image overlay */
+      /* File attachment styles */
+      .file-attachment {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #1a2a2e;
+        border: 1px solid #2a3136;
+        border-radius: 8px;
+        padding: 0.3rem 0.75rem;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #3fd2c1;
+      }
+      .file-attachment:hover {
+        border-color: #3fd2c1;
+        background: #1a3a3e;
+        transform: translateY(-1px);
+      }
+      .file-attachment .file-icon {
+        font-size: 1rem;
+      }
+      .file-attachment .file-name {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.7rem;
+        font-weight: 500;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-attachment .file-size {
+        font-size: 0.6rem;
+        color: #868d92;
+      }
       .image-overlay {
         display: none;
         position: fixed;
@@ -267,6 +301,57 @@
       }
       .image-overlay .close-btn:hover {
         color: #e8a33d;
+      }
+      /* Admin attach button */
+      .attach-btn-admin {
+        background: #2a3136;
+        border: 1px solid #2a3136;
+        border-radius: 999px;
+        padding: 0.3rem 0.8rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #868d92;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Inter", sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+      }
+      .attach-btn-admin:hover {
+        background: #3a4146;
+        color: #e8ebec;
+        border-color: #3a4146;
+      }
+      .input-with-attach-admin {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .input-with-attach-admin .admin-reply-input {
+        flex: 1;
+      }
+      .file-attachment-preview-admin {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #1a2a2e;
+        border: 1px solid #e8a33d;
+        border-radius: 8px;
+        padding: 0.25rem 0.75rem;
+        margin-top: 0.3rem;
+        font-size: 0.7rem;
+        color: #e8ebec;
+      }
+      .file-attachment-preview-admin .remove-file-admin {
+        cursor: pointer;
+        color: #e5575c;
+        font-weight: bold;
+        margin-left: 0.3rem;
+      }
+      .file-attachment-preview-admin .remove-file-admin:hover {
+        color: #e87a7a;
       }
     </style>
   </head>
@@ -342,20 +427,37 @@
                 <span id="replyLabel">↳ Replying to</span>
                 <button onclick="cancelReply()" class="text-faint/30 hover:text-danger/70 transition-colors">✕</button>
               </div>
-              <div class="flex gap-2">
+              <div class="space-y-2">
+                <div class="input-with-attach-admin">
+                  <input
+                    type="text"
+                    id="adminReplyInput"
+                    placeholder="Type your reply..."
+                    class="admin-reply-input flex-1"
+                    onkeydown="if(event.key==='Enter') sendReply()"
+                  />
+                  <button class="attach-btn-admin" onclick="document.getElementById('adminReplyAttachInput').click();">
+                    📎
+                  </button>
+                  <button
+                    onclick="sendReply()"
+                    class="bg-amber text-graphite font-semibold px-5 rounded-full hover:bg-amber/80 transition-colors text-sm flex-shrink-0"
+                  >
+                    Send
+                  </button>
+                </div>
                 <input
-                  type="text"
-                  id="adminReplyInput"
-                  placeholder="Type your reply..."
-                  class="admin-reply-input flex-1"
-                  onkeydown="if(event.key==='Enter') sendReply()"
+                  type="file"
+                  id="adminReplyAttachInput"
+                  class="hidden"
+                  onchange="handleAdminReplyAttachment(event)"
                 />
-                <button
-                  onclick="sendReply()"
-                  class="bg-amber text-graphite font-semibold px-5 rounded-full hover:bg-amber/80 transition-colors text-sm"
-                >
-                  Send
-                </button>
+                <div id="adminReplyFilePreview" class="file-attachment-preview-admin hidden">
+                  <span>📎</span>
+                  <span id="adminReplyFileName">file.exe</span>
+                  <span id="adminReplyFileSize" class="text-faint/40 text-[10px]"></span>
+                  <span class="remove-file-admin" onclick="removeAdminReplyAttachment()">✕</span>
+                </div>
               </div>
             </div>
 
@@ -364,23 +466,40 @@
               <div class="flex items-center gap-2 mb-2 text-xs text-faint/60">
                 <span>🛡️ Send as Admin</span>
               </div>
-              <div class="flex gap-2">
+              <div class="space-y-2">
+                <div class="input-with-attach-admin">
+                  <input
+                    type="text"
+                    id="adminGeneralInput"
+                    placeholder="Type your admin message..."
+                    class="admin-reply-input flex-1"
+                    onkeydown="if(event.key==='Enter') sendGeneralMessage()"
+                  />
+                  <button class="attach-btn-admin" onclick="document.getElementById('adminGeneralAttachInput').click();">
+                    📎
+                  </button>
+                  <button
+                    onclick="sendGeneralMessage()"
+                    class="bg-amber text-graphite font-semibold px-5 rounded-full hover:bg-amber/80 transition-colors text-sm flex-shrink-0"
+                  >
+                    Send
+                  </button>
+                </div>
                 <input
-                  type="text"
-                  id="adminGeneralInput"
-                  placeholder="Type your admin message..."
-                  class="admin-reply-input flex-1"
-                  onkeydown="if(event.key==='Enter') sendGeneralMessage()"
+                  type="file"
+                  id="adminGeneralAttachInput"
+                  class="hidden"
+                  onchange="handleAdminGeneralAttachment(event)"
                 />
-                <button
-                  onclick="sendGeneralMessage()"
-                  class="bg-amber text-graphite font-semibold px-5 rounded-full hover:bg-amber/80 transition-colors text-sm"
-                >
-                  Send
-                </button>
+                <div id="adminGeneralFilePreview" class="file-attachment-preview-admin hidden">
+                  <span>📎</span>
+                  <span id="adminGeneralFileName">file.exe</span>
+                  <span id="adminGeneralFileSize" class="text-faint/40 text-[10px]"></span>
+                  <span class="remove-file-admin" onclick="removeAdminGeneralAttachment()">✕</span>
+                </div>
               </div>
               <p class="text-[10px] text-faint/30 mt-1.5 text-center font-mono">
-                📎 Paste an image (Ctrl+V) to send it as a photo
+                📎 Attach any file (up to large EXE files) · Click to download from chat
               </p>
             </div>
           </div>
@@ -420,6 +539,8 @@
       let lastSeenId = 0;
       let editingMessageId = null;
       let pendingAdminImage = null;
+      let pendingAdminReplyFile = null;
+      let pendingAdminGeneralFile = null;
 
       // ============================================================
       // TOAST
@@ -452,7 +573,7 @@
         document.body.style.overflow = '';
       }
 
-      // Handle Ctrl+V paste for images in admin input
+      // Handle Ctrl+V paste for images in admin inputs
       document.addEventListener('paste', function(e) {
         const items = e.clipboardData.items;
         let imageFound = false;
@@ -491,6 +612,96 @@
       });
 
       // ============================================================
+      // FILE ATTACHMENT HANDLING (Admin Reply)
+      // ============================================================
+      function handleAdminReplyAttachment(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 200 * 1024 * 1024) {
+          showToast("❌ File too large! Maximum 200MB allowed.", "error");
+          event.target.value = '';
+          return;
+        }
+
+        pendingAdminReplyFile = file;
+        const preview = document.getElementById("adminReplyFilePreview");
+        const fileName = document.getElementById("adminReplyFileName");
+        const fileSize = document.getElementById("adminReplyFileSize");
+
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        preview.classList.remove("hidden");
+
+        const input = document.getElementById("adminReplyInput");
+        input.placeholder = `📎 ${file.name} attached! Press Send to share...`;
+        input.style.borderColor = '#e8a33d';
+
+        showToast(`📎 ${file.name} attached! Press Send to share.`, "success");
+        event.target.value = '';
+      }
+
+      function removeAdminReplyAttachment() {
+        pendingAdminReplyFile = null;
+        const preview = document.getElementById("adminReplyFilePreview");
+        preview.classList.add("hidden");
+        const input = document.getElementById("adminReplyInput");
+        input.placeholder = 'Type your reply...';
+        input.style.borderColor = '';
+        document.getElementById("adminReplyAttachInput").value = '';
+      }
+
+      // ============================================================
+      // FILE ATTACHMENT HANDLING (Admin General)
+      // ============================================================
+      function handleAdminGeneralAttachment(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 200 * 1024 * 1024) {
+          showToast("❌ File too large! Maximum 200MB allowed.", "error");
+          event.target.value = '';
+          return;
+        }
+
+        pendingAdminGeneralFile = file;
+        const preview = document.getElementById("adminGeneralFilePreview");
+        const fileName = document.getElementById("adminGeneralFileName");
+        const fileSize = document.getElementById("adminGeneralFileSize");
+
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        preview.classList.remove("hidden");
+
+        const input = document.getElementById("adminGeneralInput");
+        input.placeholder = `📎 ${file.name} attached! Press Send to share...`;
+        input.style.borderColor = '#e8a33d';
+
+        showToast(`📎 ${file.name} attached! Press Send to share.`, "success");
+        event.target.value = '';
+      }
+
+      function removeAdminGeneralAttachment() {
+        pendingAdminGeneralFile = null;
+        const preview = document.getElementById("adminGeneralFilePreview");
+        preview.classList.add("hidden");
+        const input = document.getElementById("adminGeneralInput");
+        input.placeholder = 'Type your admin message...';
+        input.style.borderColor = '';
+        document.getElementById("adminGeneralAttachInput").value = '';
+      }
+
+      // ============================================================
+      // FORMAT FILE SIZE
+      // ============================================================
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+        return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+      }
+
+      // ============================================================
       // RENDER MESSAGES
       // ============================================================
       function getProfileIcon(sender, isAdmin = false) {
@@ -520,6 +731,7 @@
             const isReply = msg.replyTo;
             const isEditing = editingMessageId === msg.id;
             const hasImage = msg.image && msg.image.startsWith('data:image');
+            const hasFile = msg.file && msg.file.name;
 
             let replyHtml = "";
             if (isReply) {
@@ -548,6 +760,18 @@
               `;
             }
 
+            let fileHtml = "";
+            if (hasFile) {
+              const downloadUrl = `${API_BASE}/download_file?filename=${encodeURIComponent(msg.file.storedName)}`;
+              fileHtml = `
+                <a href="${downloadUrl}" target="_blank" class="file-attachment" onclick="event.stopPropagation();">
+                  <span class="file-icon">📎</span>
+                  <span class="file-name">${msg.file.name}</span>
+                  <span class="file-size">(${formatFileSize(msg.file.size)})</span>
+                </a>
+              `;
+            }
+
             // Message content - either edit mode or display mode
             let messageContent = '';
             if (isEditing) {
@@ -568,6 +792,7 @@
               messageContent = `
                 ${msg.text ? `<p class="text-sm text-ink/90 break-words">${msg.text}</p>` : ''}
                 ${imageHtml}
+                ${fileHtml}
               `;
             }
 
@@ -706,6 +931,7 @@
         document.getElementById("adminReplyInput").value = "";
         document.getElementById("adminReplyInput").style.borderColor = '';
         pendingAdminImage = null;
+        removeAdminReplyAttachment();
         currentReplyTarget = null;
         currentReplySender = null;
       }
@@ -716,8 +942,8 @@
       async function sendReply() {
         const input = document.getElementById("adminReplyInput");
         const text = input.value.trim();
-        if (!text && !pendingAdminImage) {
-          showToast("❌ Please enter text or paste an image", "error");
+        if (!text && !pendingAdminImage && !pendingAdminReplyFile) {
+          showToast("❌ Please enter text, paste an image, or attach a file", "error");
           return;
         }
         if (!currentReplyTarget) return;
@@ -733,18 +959,37 @@
             payload.image = pendingAdminImage;
           }
 
+          if (pendingAdminReplyFile) {
+            const reader = new FileReader();
+            const fileData = await new Promise((resolve) => {
+              reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(pendingAdminReplyFile);
+            });
+
+            payload.fileData = fileData;
+            payload.fileName = pendingAdminReplyFile.name;
+            payload.fileSize = pendingAdminReplyFile.size;
+          }
+
           const response = await fetch(`${API_BASE}/admin_reply`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
 
-          if (!response.ok) throw new Error("Failed to send reply");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to send reply");
+          }
           showToast("✅ Reply sent successfully!", "success");
           input.value = "";
           input.placeholder = "Type your reply...";
           input.style.borderColor = '';
           pendingAdminImage = null;
+          removeAdminReplyAttachment();
           cancelReply();
           await loadMessages();
         } catch (error) {
@@ -758,8 +1003,8 @@
       async function sendGeneralMessage() {
         const input = document.getElementById("adminGeneralInput");
         const text = input.value.trim();
-        if (!text && !pendingAdminImage) {
-          showToast("❌ Please enter text or paste an image", "error");
+        if (!text && !pendingAdminImage && !pendingAdminGeneralFile) {
+          showToast("❌ Please enter text, paste an image, or attach a file", "error");
           return;
         }
 
@@ -773,18 +1018,37 @@
             payload.image = pendingAdminImage;
           }
 
+          if (pendingAdminGeneralFile) {
+            const reader = new FileReader();
+            const fileData = await new Promise((resolve) => {
+              reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(pendingAdminGeneralFile);
+            });
+
+            payload.fileData = fileData;
+            payload.fileName = pendingAdminGeneralFile.name;
+            payload.fileSize = pendingAdminGeneralFile.size;
+          }
+
           const response = await fetch(`${API_BASE}/send_message`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
 
-          if (!response.ok) throw new Error("Failed to send message");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to send message");
+          }
           showToast("✅ Admin message sent successfully!", "success");
           input.value = "";
           input.placeholder = "Type your admin message...";
           input.style.borderColor = '';
           pendingAdminImage = null;
+          removeAdminGeneralAttachment();
           await loadMessages();
         } catch (error) {
           showToast("❌ Failed to send message: " + error.message, "error");
@@ -933,6 +1197,10 @@
       window.deleteMessage = deleteMessage;
       window.openImageFullscreen = openImageFullscreen;
       window.closeImageOverlay = closeImageOverlay;
+      window.handleAdminReplyAttachment = handleAdminReplyAttachment;
+      window.removeAdminReplyAttachment = removeAdminReplyAttachment;
+      window.handleAdminGeneralAttachment = handleAdminGeneralAttachment;
+      window.removeAdminGeneralAttachment = removeAdminGeneralAttachment;
 
       window.addEventListener("beforeunload", () => {
         if (messagePollInterval) clearInterval(messagePollInterval);
