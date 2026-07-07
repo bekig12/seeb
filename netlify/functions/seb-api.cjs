@@ -2,7 +2,7 @@
 const { Buffer } = require("buffer");
 const { getStore } = require('@netlify/blobs');
 
-// Initialize persistent blob storage with manual configuration
+
 let store;
 
 function getBlobStore() {
