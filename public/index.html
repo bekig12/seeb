@@ -374,7 +374,6 @@
         gap: 0.5rem;
         margin-bottom: 0.75rem;
       }
-      /* Profile selector at top */
       .profile-selector {
         display: flex;
         gap: 0.75rem;
@@ -411,7 +410,6 @@
         display: block;
         margin-bottom: 0.2rem;
       }
-      /* Image styles */
       .chat-image {
         max-width: 200px;
         max-height: 200px;
@@ -424,7 +422,6 @@
       .chat-image:hover {
         transform: scale(1.02);
       }
-      /* Fullscreen image overlay */
       .image-overlay {
         display: none;
         position: fixed;
@@ -461,7 +458,6 @@
       .image-overlay .close-btn:hover {
         color: #d69e2e;
       }
-      /* Shortcuts card styles */
       .shortcuts-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -501,6 +497,91 @@
         display: block;
         margin-bottom: 0.1rem;
       }
+      /* File attachment styles */
+      .file-attachment {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #edf2f7;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.4rem 0.75rem;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #2d3748;
+      }
+      .file-attachment:hover {
+        border-color: #d69e2e;
+        background: #fefcbf;
+        transform: translateY(-1px);
+      }
+      .file-attachment .file-icon {
+        font-size: 1.2rem;
+      }
+      .file-attachment .file-name {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 500;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-attachment .file-size {
+        font-size: 0.65rem;
+        color: #718096;
+      }
+      .attach-btn {
+        background: #edf2f7;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        padding: 0.3rem 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #4a5568;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Inter", sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+      }
+      .attach-btn:hover {
+        background: #d69e2e;
+        color: #ffffff;
+        border-color: #d69e2e;
+      }
+      .input-with-attach {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .input-with-attach .chat-input {
+        flex: 1;
+      }
+      .file-attachment-preview {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fefcbf;
+        border: 1px solid #d69e2e;
+        border-radius: 8px;
+        padding: 0.25rem 0.75rem;
+        margin-top: 0.3rem;
+        font-size: 0.75rem;
+      }
+      .file-attachment-preview .remove-file {
+        cursor: pointer;
+        color: #e53e3e;
+        font-weight: bold;
+        margin-left: 0.3rem;
+      }
+      .file-attachment-preview .remove-file:hover {
+        color: #c53030;
+      }
     </style>
   </head>
 
@@ -515,7 +596,7 @@
         <div class="text-muted/50 text-sm font-mono">v2</div>
       </div>
 
-      <!-- Profile Selector (moved to top) -->
+      <!-- Profile Selector -->
       <div class="profile-selector" id="profileSelector">
         <div class="profile-option active" data-sender="sister" onclick="selectSender('sister')">
           <span class="emoji">👩</span>
@@ -556,7 +637,6 @@
 
           <!-- Folder Locations -->
           <div class="folder-locations-grid">
-            <!-- Folder 1: User-specific (with username input) -->
             <div class="folder-location">
               <span class="text-muted/60 text-[10px] font-sans font-medium uppercase tracking-wider flex-shrink-0">User:</span>
               <span class="text-muted/40">C:\Users\</span>
@@ -564,7 +644,6 @@
               <span class="text-muted/40">\AppData\Roaming\SafeExamBrowser</span>
               <button class="folder-copy-btn" onclick="copyFolderPath(1)" id="copyBtn1">📋 Copy</button>
             </div>
-            <!-- Folder 2: System-wide -->
             <div class="folder-location">
               <span class="text-muted/60 text-[10px] font-sans font-medium uppercase tracking-wider flex-shrink-0">System:</span>
               <span class="folder-path">C:\ProgramData\SafeExamBrowser</span>
@@ -612,7 +691,7 @@
           <div class="flex items-center gap-2 mb-4">
             <span class="text-xs font-mono text-muted/60 uppercase tracking-wider">💬 chat</span>
             <span class="h-px flex-1 bg-border"></span>
-            <span class="text-xs text-muted/40 font-mono">Ctrl+V to paste image</span>
+            <span class="text-xs text-muted/40 font-mono">Ctrl+V for images</span>
           </div>
 
           <!-- Chat Messages -->
@@ -620,21 +699,38 @@
             <div class="text-center text-muted/30 text-xs font-mono py-4">No messages yet. Be the first!</div>
           </div>
 
-          <!-- Chat Input -->
-          <div class="flex gap-3">
+          <!-- Chat Input with Attach Button -->
+          <div class="space-y-2">
+            <div class="input-with-attach">
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Type your message or paste image (Ctrl+V)..."
+                class="chat-input"
+                onkeydown="if (event.key === 'Enter') sendMessage();"
+              />
+              <button id="attachBtn" class="attach-btn" onclick="document.getElementById('fileAttachInput').click();">
+                📎 Attach
+              </button>
+              <button onclick="sendMessage()" class="bg-amber text-white font-semibold px-5 rounded-full hover:bg-amberhover transition-colors flex-shrink-0">
+                Send
+              </button>
+            </div>
             <input
-              type="text"
-              id="chatInput"
-              placeholder="Type your message or paste image (Ctrl+V)..."
-              class="chat-input"
-              onkeydown="if (event.key === 'Enter') sendMessage();"
+              type="file"
+              id="fileAttachInput"
+              class="hidden"
+              onchange="handleFileAttachment(event)"
             />
-            <button onclick="sendMessage()" class="bg-amber text-white font-semibold px-5 rounded-full hover:bg-amberhover transition-colors">
-              Send
-            </button>
+            <div id="fileAttachmentPreview" class="file-attachment-preview hidden">
+              <span>📎</span>
+              <span id="attachedFileName">file.exe</span>
+              <span id="attachedFileSize" class="text-muted/60 text-[10px]"></span>
+              <span class="remove-file" onclick="removeFileAttachment()">✕</span>
+            </div>
           </div>
           <p class="text-[10px] text-muted/40 mt-1.5 text-center font-mono">
-            📎 Paste an image (Ctrl+V) to send it as a photo
+            📎 Attach any file (up to large EXE files) · Click to download from chat
           </p>
         </div>
       </div>
@@ -674,8 +770,8 @@
             </div>
             <div class="shortcut-item">
               <span class="action-icon">📎</span>
-              <span class="keys">Ctrl+V</span>
-              <span class="action-label">Paste Image to Chat</span>
+              <span class="keys">Attach</span>
+              <span class="action-label">Send Files</span>
             </div>
           </div>
         </div>
@@ -736,6 +832,7 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
       let messagePollInterval = null;
       let lastSeenId = 0;
       let pendingImage = null;
+      let pendingFile = null;
 
       // ============================================================
       // FOLDER PATH COPY FUNCTIONS
@@ -966,7 +1063,48 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
       });
 
       // ============================================================
-      // SENDER SELECTION (with localStorage)
+      // FILE ATTACHMENT HANDLING
+      // ============================================================
+      function handleFileAttachment(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Check file size (200MB limit for preview purposes)
+        if (file.size > 200 * 1024 * 1024) {
+          showToast("❌ File too large! Maximum 200MB allowed.", "error");
+          event.target.value = '';
+          return;
+        }
+
+        pendingFile = file;
+        const preview = document.getElementById("fileAttachmentPreview");
+        const fileName = document.getElementById("attachedFileName");
+        const fileSize = document.getElementById("attachedFileSize");
+
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        preview.classList.remove("hidden");
+
+        const input = document.getElementById("chatInput");
+        input.placeholder = `📎 ${file.name} attached! Press Send to share...`;
+        input.style.borderColor = '#d69e2e';
+
+        showToast(`📎 ${file.name} attached! Press Send to share.`, "success");
+        event.target.value = '';
+      }
+
+      function removeFileAttachment() {
+        pendingFile = null;
+        const preview = document.getElementById("fileAttachmentPreview");
+        preview.classList.add("hidden");
+        const input = document.getElementById("chatInput");
+        input.placeholder = 'Type your message or paste image (Ctrl+V)...';
+        input.style.borderColor = '';
+        document.getElementById("fileAttachInput").value = '';
+      }
+
+      // ============================================================
+      // SENDER SELECTION
       // ============================================================
       function selectSender(sender) {
         currentSender = sender;
@@ -1006,7 +1144,6 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
         document.body.style.overflow = '';
       }
 
-      // Handle Ctrl+V paste for images
       document.addEventListener('paste', function(e) {
         const items = e.clipboardData.items;
         let imageFound = false;
@@ -1048,6 +1185,13 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
         return sender === "sister" ? { emoji: "👩", label: "Sister" } : { emoji: "👨", label: "Brother" };
       }
 
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+        return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+      }
+
       function renderMessages(messages) {
         const container = document.getElementById("chatMessages");
         if (!messages || messages.length === 0) {
@@ -1065,6 +1209,7 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
             const isAdmin = msg.isAdminReply || false;
             const isReply = msg.replyTo;
             const hasImage = msg.image && msg.image.startsWith('data:image');
+            const hasFile = msg.file && msg.file.name;
 
             let replyHtml = "";
             if (isReply) {
@@ -1093,6 +1238,18 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
               `;
             }
 
+            let fileHtml = "";
+            if (hasFile) {
+              const downloadUrl = `${API_BASE}/download_file?filename=${encodeURIComponent(msg.file.storedName)}`;
+              fileHtml = `
+                <a href="${downloadUrl}" target="_blank" class="file-attachment" onclick="event.stopPropagation();">
+                  <span class="file-icon">📎</span>
+                  <span class="file-name">${msg.file.name}</span>
+                  <span class="file-size">(${formatFileSize(msg.file.size)})</span>
+                </a>
+              `;
+            }
+
             return `
               <div class="message-card ${isAdmin ? "border-amber/30" : ""}">
                 ${replyHtml}
@@ -1113,6 +1270,7 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
                     </div>
                     ${msg.text ? `<p class="text-sm text-text/90 break-words">${msg.text}</p>` : ''}
                     ${imageHtml}
+                    ${fileHtml}
                   </div>
                 </div>
               </div>
@@ -1153,7 +1311,8 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
         const input = document.getElementById("chatInput");
         const text = input.value.trim();
         
-        if (!text && !pendingImage) {
+        if (!text && !pendingImage && !pendingFile) {
+          showToast("❌ Please enter text, paste an image, or attach a file", "error");
           return;
         }
 
@@ -1168,90 +1327,20 @@ This applies to EVERY message. No greetings, no confirmations, just answers.
             payload.image = pendingImage;
           }
 
-          const response = await fetch(`${API_BASE}/send_message`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          if (pendingFile) {
+            const reader = new FileReader();
+            const fileData = await new Promise((resolve) => {
+              reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(pendingFile);
+            });
 
-          if (!response.ok) throw new Error("Failed to send message");
-          
-          input.value = "";
-          input.placeholder = 'Type your message or paste image (Ctrl+V)...';
-          input.style.borderColor = '';
-          pendingImage = null;
-          
-          await loadMessages();
-        } catch (error) {
-          showToast("❌ Failed to send message: " + error.message, "error");
-        }
-      }
-
-      // ============================================================
-      // COPY PROMPT
-      // ============================================================
-      function copyPrompt() {
-        const promptText = document.getElementById("promptText").innerText;
-        navigator.clipboard.writeText(promptText).then(() => {
-          const btn = document.querySelector(".copy-btn");
-          btn.textContent = "✅ Copied!";
-          btn.classList.add("copied");
-          setTimeout(() => {
-            btn.textContent = "📋 Copy";
-            btn.classList.remove("copied");
-          }, 2000);
-        }).catch(() => {
-          const textarea = document.createElement("textarea");
-          textarea.value = promptText;
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand("copy");
-          document.body.removeChild(textarea);
-          const btn = document.querySelector(".copy-btn");
-          btn.textContent = "✅ Copied!";
-          btn.classList.add("copied");
-          setTimeout(() => {
-            btn.textContent = "📋 Copy";
-            btn.classList.remove("copied");
-          }, 2000);
-        });
-      }
-
-      // ============================================================
-      // INIT
-      // ============================================================
-      async function init() {
-        initSender();
-        
-        try {
-          const response = await fetch(`${API_BASE}/messages`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.messages && data.messages.length > 0) {
-              const lastMessage = data.messages[data.messages.length - 1];
-              lastSeenId = parseInt(lastMessage.id);
-            }
-            renderMessages(data.messages || []);
+            payload.fileData = fileData;
+            payload.fileName = pendingFile.name;
+            payload.fileSize = pendingFile.size;
           }
-        } catch (error) {
-          console.error("Init error:", error);
-        }
 
-        messagePollInterval = setInterval(loadMessages, 5000);
-      }
-
-      init();
-      window.downloadPatcher = downloadPatcher;
-      window.selectSender = selectSender;
-      window.sendMessage = sendMessage;
-      window.copyPrompt = copyPrompt;
-      window.copyFolderPath = copyFolderPath;
-      window.openImageFullscreen = openImageFullscreen;
-      window.closeImageOverlay = closeImageOverlay;
-
-      window.addEventListener("beforeunload", () => {
-        if (messagePollInterval) clearInterval(messagePollInterval);
-      });
-    </script>
-  </body>
-</html>
+          const response = await fetch(`${API_BASE}/send_message`, {
+           
