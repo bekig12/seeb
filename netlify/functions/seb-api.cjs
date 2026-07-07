@@ -569,11 +569,27 @@ async function handleDownloadFile(event) {
 // ============================================================
 
 exports.handler = async (event, context) => {
+  // Get the path correctly
   let path = event.path || event.rawPath || "";
+  
+  // Remove the function path prefix if present
   const functionPath = "/.netlify/functions/seb-api";
-  if (path.startsWith(functionPath)) path = path.substring(functionPath.length);
-  if (path.startsWith("/api")) path = path.substring(4);
-  if (!path || path === "") path = "/";
+  if (path.startsWith(functionPath)) {
+    path = path.substring(functionPath.length);
+  }
+  
+  // Remove /api prefix if present
+  if (path.startsWith("/api")) {
+    path = path.substring(4);
+  }
+  
+  // Ensure path starts with /
+  if (!path || path === "") {
+    path = "/";
+  }
+  if (!path.startsWith("/")) {
+    path = "/" + path;
+  }
 
   const method = event.httpMethod || "GET";
 
@@ -590,6 +606,8 @@ exports.handler = async (event, context) => {
   let response;
 
   console.log(`[seb-api] Method: ${method}, Path: ${path}`);
+
+  // Route handling - match exactly
   if (method === "POST" && path === "/upload_seb") {
     response = await handleUpload(event);
   } else if (method === "GET" && path === "/list_files") {
@@ -607,10 +625,13 @@ exports.handler = async (event, context) => {
   } else if (method === "POST" && path === "/delete_message") {
     response = await handleDeleteMessage(event);
   } else {
+    console.log(`[seb-api] No route matched: ${method} ${path}`);
     response = {
       statusCode: 200,
       body: JSON.stringify({
         service: "SEB API",
+        path: path,
+        method: method,
         endpoints: {
           upload: "POST /api/upload_seb",
           list_files: "GET /api/list_files",
